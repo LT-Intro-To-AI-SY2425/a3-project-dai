@@ -4,3 +4,5 @@ project idea: FRC chatbot (using blue alliance/FIRST apis)
 
   - list teams that played at <event>
   - list events that <team> played at
+  - who won <event>
+  - what place did <team> rank at <event>
