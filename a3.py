@@ -1,0 +1,84 @@
+import re
+from typing import List, Callable, Tuple
+from api import BlueAllianceAPI
+from match import match
+
+# Initialize the API
+api = BlueAllianceAPI("YZUHjjkawrWXVjXfKJHzGKgTecWKNgcAoe48bzO23gq20K1vR0Ww5m9k7CJADdnI")
+
+# Define action functions
+def list_teams_at_event(matches: List[str]) -> List[str]:
+    event_key = matches[0]
+    teams = api.get_teams_at_event(event_key)
+    return [team['nickname'] for team in teams]
+
+def list_events_for_team(matches: List[str]) -> List[str]:
+    team_key = matches[0]
+    events = api.get_events_for_team(team_key)
+    return [event['name'] for event in events]
+
+def get_event_winner(matches: List[str]) -> List[str]:
+    event_key = matches[0]
+    winners = api.get_event_winners(event_key)
+    if winners:
+        return winners
+    return ["No winner found"]
+
+def get_team_ranking_at_event(matches: List[str]) -> List[str]:
+    event_key = matches[1]
+    team_key = matches[0]
+    ranking = api.get_team_ranking_at_event(event_key, team_key)
+    if ranking:
+        record = ranking[1]
+        record_str = f"{record['wins']} wins, {record['losses']} losses, {record['ties']} ties"
+        return [f"{team_key} ranked {ranking[0]} at {event_key} with a record of {record_str}."]
+    return ["No ranking found"]
+
+# Define pattern-action list
+pa_list: List[Tuple[List[str], Callable[[List[str]], List[str]]]] = [
+    (["list", "teams", "that", "played", "at", "_"], list_teams_at_event),
+    (["list", "events", "that", "_", "played", "at"], list_events_for_team),
+    (["who", "won", "_"], get_event_winner),
+    (["what", "place", "did", "_", "rank", "at", "_"], get_team_ranking_at_event),
+    (["bye"], lambda _: ["Goodbye!"]),
+]
+
+def search_pa_list(src: List[str]) -> List[str]:
+    """Takes source, finds matching pattern and calls corresponding action. If it finds
+    a match but has no answers it returns ["No answers"]. If it finds no match it
+    returns ["I don't understand"].
+
+    Args:
+        source - a phrase represented as a list of words (strings)
+
+    Returns:
+        a list of answers. Will be ["I don't understand"] if it finds no matches and
+        ["No answers"] if it finds a match but no answers
+    """
+    for pattern, action in pa_list:
+        matches = match(pattern, src)
+        if matches is not None:
+            answers = action(matches)
+            return answers if answers else ["No answers"]
+    return ["I don't understand"]
+
+def query_loop() -> None:
+    """The simple query loop. The try/except structure is to catch Ctrl-C or Ctrl-D
+    characters and exit gracefully.
+    """
+    print("Welcome to the Blue Alliance chatbot!\n")
+    while True:
+        try:
+            print()
+            query = input("Your query? ").replace("?", "").lower().split()
+            answers = search_pa_list(query)
+            for ans in answers:
+                print(ans)
+
+        except (KeyboardInterrupt, EOFError):
+            break
+
+    print("\nGoodbye!\n")
+
+if __name__ == "__main__":
+    query_loop()
