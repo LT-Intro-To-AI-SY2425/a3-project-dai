@@ -5,18 +5,31 @@ import requests
 class BlueAllianceAPI:
     BASE_URL = "https://www.thebluealliance.com/api/v3"
 
+    def check(self, response):
+        if 'Error' in response:
+            return None
+        return response
+
     def __init__(self, auth_key):
         self.headers = {"X-TBA-Auth-Key": auth_key}
 
     def get_teams_at_event(self, event_key):
         url = f"{self.BASE_URL}/event/{event_key}/teams"
         response = requests.get(url, headers=self.headers)
-        return response.json()
+        return self.check(response.json())
 
     def get_events_for_team(self, team_key):
         url = f"{self.BASE_URL}/team/{team_key}/events"
         response = requests.get(url, headers=self.headers)
-        return response.json()
+        return self.check(response.json())
+    
+    def get_event_key_from_name(self, year, event_name):
+        url = f"{self.BASE_URL}/events/{year}/simple"
+        response = requests.get(url, headers=self.headers)
+        events = response.json()
+        for event in events:
+            if event['name'].lower() == event_name.lower():
+                return event
 
     def get_event_winners(self, event_key):
         url = f"{self.BASE_URL}/event/{event_key}/teams/statuses"
@@ -43,7 +56,7 @@ class BlueAllianceAPI:
     def get_event_info(self, event_key):
         url = f"{self.BASE_URL}/event/{event_key}"
         response = requests.get(url, headers=self.headers)
-        return response.json()
+        return self.check(response.json())
 
 # midwest regional is "2024ilch"
 # 4645 is "frc4645"
