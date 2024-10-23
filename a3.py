@@ -4,16 +4,16 @@ from typing import List, Callable, Tuple
 
 api = BlueAllianceAPI("YZUHjjkawrWXVjXfKJHzGKgTecWKNgcAoe48bzO23gq20K1vR0Ww5m9k7CJADdnI")
 
-def get_event_key_from_name(matches: List[str]) -> List[str]:
-    event_year = matches[0][:4]
-    event_name = matches[0][5:]
+def get_event_key_from_name(event_name: str) -> str:
+    event_year = event_name[:4]
+    event_name = event_name[5:]
     event = api.get_event_key_from_name(event_year, event_name)
     if event:
-        return [event['key']]
-    return ["No event found"]
+        return event['key']
+    return None
 
 def list_teams_at_event(matches: List[str]) -> List[str]:
-    event_key = matches[0]
+    event_key = get_event_key_from_name(matches[0])
     teams = api.get_teams_at_event(event_key)
     if teams:
         return [team['nickname'] for team in teams]
@@ -23,19 +23,19 @@ def list_events_for_team(matches: List[str]) -> List[str]:
     team_key = matches[0]
     events = api.get_events_for_team(team_key)
     if events:
-        return [event['name'] for event in events]
+        return [f"{event['year']} {event['name']}" for event in events]
     return ["No events found"]
 
 def get_event_winner(matches: List[str]) -> List[str]:
-    event_key = matches[0]
+    event_key = get_event_key_from_name(matches[0])
     winners = api.get_event_winners(event_key)
     if winners:
-        return winners
+        return [f"{winner} - {api.get_team_info(winner)['nickname']}" for winner in winners]
     return ["No winner found"]
 
 def get_team_ranking_at_event(matches: List[str]) -> List[str]:
-    event_key = matches[1]
     team_key = matches[0]
+    event_key = get_event_key_from_name(matches[1])
     ranking = api.get_team_ranking_at_event(event_key, team_key)
     if ranking:
         record = ranking[1]
@@ -44,21 +44,27 @@ def get_team_ranking_at_event(matches: List[str]) -> List[str]:
     return ["No ranking found"]
 
 def get_event_info(matches: List[str]) -> List[str]:
-    event_key = matches[0]
+    event_key = get_event_key_from_name(matches[0])
     event = api.get_event_info(event_key)
     if event:
-        # return [event['name'], event['location_name'], event['start_date'], event['end_date']]
         return [f"The {event['name']} was hosted at {event['location_name']} and ran from {event['start_date']} to {event['end_date']}."]
     return ["No event found"]
 
+def get_team_info(matches: List[str]) -> List[str]:
+    team_key = matches[0]
+    team = api.get_team_info(team_key)
+    if team:
+        return [f"{team['nickname']} is from {team['school_name']} in {team['city']}, {team['state_prov']}, {team['country']}. Their rookie year was {team['rookie_year']}."]
+    return ["No team found"]
+
 # Define pattern-action list
 pa_list: List[Tuple[List[str], Callable[[List[str]], List[str]]]] = [
-    (str.split("what is the identifier for %"), get_event_key_from_name),
-    (str.split("list teams that played at _"), list_teams_at_event),
+    (str.split("list teams that played at %"), list_teams_at_event),
     (str.split("list events that _ played at"), list_events_for_team),
-    (str.split("who won _"), get_event_winner),
-    (str.split("what place did _ rank at _"), get_team_ranking_at_event),
-    (str.split("tell me about _"), get_event_info),
+    (str.split("who won %"), get_event_winner),
+    (str.split("what place did _ rank at %"), get_team_ranking_at_event),
+    (str.split("tell me about event %"), get_event_info),
+    (str.split("tell me about team _"), get_team_info),
     (["bye"], lambda _: exit())
 ]
 

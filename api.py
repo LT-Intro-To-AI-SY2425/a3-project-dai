@@ -26,7 +26,9 @@ class BlueAllianceAPI:
     def get_event_key_from_name(self, year, event_name):
         url = f"{self.BASE_URL}/events/{year}/simple"
         response = requests.get(url, headers=self.headers)
-        events = response.json()
+        events = self.check(response.json())
+        if not events:
+            return None
         for event in events:
             if event['name'].lower() == event_name.lower():
                 return event
@@ -34,7 +36,9 @@ class BlueAllianceAPI:
     def get_event_winners(self, event_key):
         url = f"{self.BASE_URL}/event/{event_key}/teams/statuses"
         response = requests.get(url, headers=self.headers)
-        statuses = response.json()
+        statuses = self.check(response.json())
+        if not statuses:
+            return None
         winners = []
         for team, status in statuses.items():
             playoff = status.get('playoff')
@@ -55,6 +59,11 @@ class BlueAllianceAPI:
 
     def get_event_info(self, event_key):
         url = f"{self.BASE_URL}/event/{event_key}"
+        response = requests.get(url, headers=self.headers)
+        return self.check(response.json())
+    
+    def get_team_info(self, team_key):
+        url = f"{self.BASE_URL}/team/{team_key}"
         response = requests.get(url, headers=self.headers)
         return self.check(response.json())
 
