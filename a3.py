@@ -57,6 +57,43 @@ def get_team_info(matches: List[str]) -> List[str]:
         return [f"{team['nickname']} is from {team['school_name']} in {team['city']}, {team['state_prov']}, {team['country']}. Their rookie year was {team['rookie_year']}."]
     return ["No team found"]
 
+def get_team_districts(matches: List[str]) -> List[str]:
+    team_key = matches[0]
+    districts = api.get_team_districts(team_key)
+    if districts:
+        return [district['abbreviation'] for district in districts]
+    return ["No districts found"]
+
+def get_district_teams(matches: List[str]) -> List[str]:
+    district_name = matches[0]
+    year = matches[1]
+    teams = api.get_district_teams(year + district_name)
+    if teams:
+        return [team['nickname'] for team in teams]
+    return ["No teams found"]
+
+def get_district_rankings(matches: List[str]) -> List[str]:
+    district_name = matches[0]
+    year = matches[1]
+    teams = reversed(api.get_district_rankings(year + district_name))
+    if teams:
+        return [f"{team['rank']}: {team['team_key']} - {team['point_total']} points" for team in teams]
+    return ["No teams found"]
+
+def get_district_events(matches: List[str]) -> List[str]:
+    district_name = matches[0]
+    year = matches[1]
+    events = api.get_district_events(year + district_name)
+    if events:
+        return [f"{event['name']} -- {event['start_date']} to {event['end_date']}" for event in events]
+    return ["No events found"]
+def get_districts(matches: List[str]) -> List[str]:
+    year = matches[0]
+    districts = api.get_districts(year)
+    if districts:
+        return [f"{district['abbreviation']} - {district['display_name']}" for district in districts]
+    return ["No districts found"]
+
 # Define pattern-action list
 pa_list: List[Tuple[List[str], Callable[[List[str]], List[str]]]] = [
     (str.split("list teams that played at %"), list_teams_at_event),
@@ -65,6 +102,11 @@ pa_list: List[Tuple[List[str], Callable[[List[str]], List[str]]]] = [
     (str.split("what place did _ rank at %"), get_team_ranking_at_event),
     (str.split("tell me about event %"), get_event_info),
     (str.split("tell me about team _"), get_team_info),
+    (str.split("what districts is _ in"), get_team_districts),
+    (str.split("list teams in district % in %"), get_district_teams),
+    (str.split("list rankings in district % in %"), get_district_rankings),
+    (str.split("list events in district % in %"), get_district_events),
+    (str.split("list districts in %"), get_districts),
     (["bye"], lambda _: exit())
 ]
 

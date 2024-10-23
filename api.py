@@ -66,6 +66,29 @@ class BlueAllianceAPI:
         url = f"{self.BASE_URL}/team/{team_key}"
         response = requests.get(url, headers=self.headers)
         return self.check(response.json())
+    
+    def get_team_districts(self, team_key):
+        url = f"{self.BASE_URL}/team/{team_key}/districts"
+        response = requests.get(url, headers=self.headers)
+        return self.check(response.json())
+    
+    def get_district_teams(self, district_key):
+        url = f"{self.BASE_URL}/district/{district_key}/teams"
+        response = requests.get(url, headers=self.headers)
+        return self.check(response.json())
+    
+    def get_district_rankings(self, district_key):
+        url = f"{self.BASE_URL}/district/{district_key}/rankings"
+        response = requests.get(url, headers=self.headers)
+        return self.check(response.json())
+    def get_district_events(self, district_key):
+        url = f"{self.BASE_URL}/district/{district_key}/events"
+        response = requests.get(url, headers=self.headers)
+        return self.check(response.json())
+    def get_districts(self, year):
+        url = f"{self.BASE_URL}/districts/{year}"
+        response = requests.get(url, headers=self.headers)
+        return self.check(response.json())
 
 # midwest regional is "2024ilch"
 # 4645 is "frc4645"
